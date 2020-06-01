@@ -2,6 +2,7 @@ package com.abc.test;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -57,5 +58,16 @@ public class DummyData {
 				++canBeAdded;
 		}
 		return ratings;
+	}
+
+	public static Set<String> dummyMovieIds(int count) {
+		List<String> movieProps = ReadFile.getLinesAsList("Movies.properties");
+		count = Math.min(count, movieProps.size());
+		count = Util_Elementary.randomNum(count);
+		log.info("Creating {} dummy Movie-IDs.", count);
+		Set<String> movieIds = new HashSet<>();
+		while (movieIds.size() < count)
+			movieIds.add(movieProps.get(Util_Elementary.randomNum(movieProps.size() - 1)));
+		return movieIds;
 	}
 }

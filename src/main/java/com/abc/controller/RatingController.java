@@ -17,38 +17,55 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.abc.config.Constants;
+import com.abc.config.ObjectMapperConfig;
 import com.abc.dto.ClientResponse;
 import com.abc.dto.RatingDto;
 import com.abc.service.RatingService;
 import com.abc.test.DummyData;
 
 @RestController
-@RequestMapping("/movie-rating")
+@RequestMapping("/movie-ratings")
 public class RatingController {
 	private static final Logger log = LoggerFactory.getLogger(RatingController.class);
 	@Autowired
 	private RatingService ratingService;
+	@Autowired
+	private ObjectMapperConfig mapper;
 
 	@GetMapping("")
 	private ResponseEntity<ClientResponse> getRatings() {
 		return createResponse(ratingService.getAllRatings()); // TODO - Check for exceptions
 	}
 
-	@GetMapping("/{movieId}")
+	@GetMapping("/as-response-entity/{movieId}")
 	private Object getRating(@Valid @PathVariable("movieId") String movieId) {
-		log.debug("# movieId: {}", movieId);
-		return createResponse(ratingService.getRating(movieId)); // TODO - Check for exceptions
-//		return ratingService.getRating(movieId).getData();
+		ClientResponse response = ratingService.getRating(movieId);
+		log.info("# Returning Rating Response: {}", mapper.toJson(response.getData()));
+		return createResponse(response); // TODO - Check for exceptions
+	}
+
+	@GetMapping("/as-response-entity/users/{userId}")
+	private ResponseEntity<ClientResponse> getUserRating(@Valid @PathVariable("userId") String userId) {
+		ClientResponse response = ratingService.getUserRating(userId); // TODO - Add userId field to Rating entity and DTO.
+		log.info("# Returning Rating Response: {}", mapper.toJson(response.getData()));
+		return createResponse(response); // TODO - Check for exceptions
+	}
+
+	@GetMapping("/as-client-response/users/{userId}")
+	private ClientResponse getUserRatingAsList(@Valid @PathVariable("userId") String userId) {
+		ClientResponse response = ratingService.getUserRatingAsClientResponse(userId);
+		return response; // TODO - Check for exceptions
 	}
 
 	@PostMapping("/")
 	private ResponseEntity<ClientResponse> addRating(@Valid @RequestBody RatingDto dto) {
+		// TODO ------- REMOVE THIS ------- Start
 		int totalSaved = getSavedRatings().size();
 		if (totalSaved >= Constants.MAX_ITEMS_TO_SAVE) {
 			log.error("Enough sample movie-ratings(" + totalSaved + ") stored.");
 			return createResponse(null);
 		}
-		log.debug("# RatingDto: {}", dto);
+		// TODO ------- REMOVE THIS ------- End
 		dto = DummyData.randomRating();
 		log.debug("# Dummy RatingDto: {}", dto);
 		return createResponse(ratingService.addRating(dto)); // TODO - Check for exceptions

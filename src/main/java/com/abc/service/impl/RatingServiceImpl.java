@@ -2,6 +2,7 @@ package com.abc.service.impl;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import com.abc.dto.RatingDto;
 import com.abc.entity.Rating;
 import com.abc.repo.RatingRepo;
 import com.abc.service.RatingService;
+import com.abc.test.DummyData;
 import com.abc.util.Util;
 
 @Service
@@ -37,7 +39,36 @@ public class RatingServiceImpl implements RatingService {
 		log.debug("# movieId: {}", movieId);
 		Rating rating = ratingRepo.findByMovieId(movieId).orElse(null);// TODO .orElseThrow(() -> new IllegalArgumentException("No rating found for Movie Id: " + movieId));
 		log.info("# Rating: {}", rating);
-		return createClientResponse(rating);
+		return createClientResponse(mapper.convert(rating, RatingDto.class));
+	}
+
+	@Override
+	public ClientResponse getUserRating(String userId) {
+		log.debug("# userId: {}", userId); // TODO - RATING TABLE SHOULD HAVE COLUMN USER ID, ADD IT
+		Set<String> movieIds = DummyData.dummyMovieIds(5); // TODO - REMOVE
+		List<RatingDto> ratingDtos = movieIds.stream().map(id -> {
+			Rating rating = ratingRepo.findByMovieId(id).orElse(null); // TODO - FIND BY USER ID, NOT MOVIE ID
+			// TODO .orElseThrow(() -> new IllegalArgumentException("No rating found for Movie Id: " + movieId));
+			log.info("# Rating: {}", rating);
+			RatingDto ratingDto = mapper.convert(rating, RatingDto.class);
+			log.info("# RatingDto: {}", ratingDto);
+			return ratingDto;
+		}).collect(Collectors.toList());
+		log.info("# Rating-list: {}", ratingDtos);
+		return createClientResponse(ratingDtos);
+	}
+
+	@Override
+	public ClientResponse getUserRatingAsClientResponse(String userId) {
+		// TODO - RATING TABLE SHOULD HAVE COLUMN USER ID, ADD IT
+		Set<String> movieIds = DummyData.dummyMovieIds(5); // TODO - REMOVE
+		List<RatingDto> ratingDtos = movieIds.stream().map(id -> {
+			Rating rating = ratingRepo.findByMovieId(id).orElse(null); // TODO - FIND BY USER ID, NOT MOVIE ID
+			// TODO .orElseThrow(() -> new IllegalArgumentException("No rating found for Movie Id: " + movieId));
+			return mapper.convert(rating, RatingDto.class);
+		}).collect(Collectors.toList());
+		log.info("# Rating-list: {}", ratingDtos);
+		return createClientResponse(ratingDtos);
 	}
 
 	@Override
